@@ -8,14 +8,31 @@ import locale
 import time
 import sys
 
+import threading
+
 # gui modules
-from PyQt5.QtWidgets import QWidget
-from PyQt5.QtWidgets import QToolTip, QPushButton, QApplication
+from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QFont
+from PyQt5 import QtCore
+
+from pyqtgraph import PlotWidget, plot
+import pyqtgraph as pg
+
+# import matplotlib
+# import matplotlib.pyplot as plt
+# import matplotlib.animation as animation
+# import matplotlib.dates as mdates
+# from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+# from matplotlib.figure import Figure
+
+# matplotlib.rcParams['backend'] = 'Qt5Agg'
+# matplotlib.rcParams['text.usetex'] = False
+
+# matplotlib.use('Qt5Agg')
 
 class PyArd():
 
-    def get_data(self, old_data, test):
+    def get_data(self, old_data):
         '''
         Receives data from the board and checks whether the values
         are correct. The data is stored as a list:
@@ -26,7 +43,6 @@ class PyArd():
         Args:
             old_data (list): values from the last measurements;
                              (empty list for first measurement)
-            test (bool): true if the mode is set to 'test' or 'test_nogui'
 
         Returns:
             new_data (list): values from the current measurement
@@ -41,15 +57,15 @@ class PyArd():
             upd = False
             while self.ard.inWaiting() == 0:
                 pass
-            data = str(self.ard.readline(), 'utf-8').split(';')
-            if len(data) <= 2:
+            ard_data = str(self.ard.readline(), 'utf-8').split(';')
+            if len(ard_data) <= 2:
                 return from_ard(old_data)
             else:
-                return data
+                return ard_data
 
         new_data = from_ard(old_data)
         # adds reception time, not measurement time
-        new_data.append(datetime.datetime.now())
+        new_data.append(datetime.datetime.now().timestamp())
         # checks if some quantity has not been measured
         for i in range(0, 5):
             if new_data[i] == 'nan':
@@ -70,180 +86,274 @@ class PyArd():
 
         return new_data, stat
 
-    def init_cmd(self, test):
-        """
-        Runs the program in command line mode.
-        
-        Args:
-            test (bool): true if the program runs in test mode
-        """
-
-        counter = 0
-        rule = '|{}|{}|{}|{}|{}|{}|'.format(
-              '-' * 21, '-' * 10, '-' * 10, '-' * 10, '-' * 10, '-' * 10)
-
-        print(rule)
-        # header
-        print('| {:<19} | {:<8} | {:<8} | {:<8} | {:<8} | {:<8} |'.format(
-              'Time', 'Temp. 1', 'Temp. 2', 'Temp. 3', 'Pres.',
-              'Hum. (%)'))
-        # units and sensor uncertainties
-        print('| {:<19} | {:<8} | {:<8} | {:<8} | {:<8} | {:<8} |'.format(
-              'dd/mm/aaaa hh:mm:ss', '± 0.5ºC', '± 0.5ºC', '± 0.5ºC',
-              '± 1 hPa', '± 2%'))
-        print(rule)
-
-        # measurement loop
-        while True:
-            data, stat = self.update_data(counter)
-
-            # prints the values
-            self.data_line = '| {:<19} |'.format(data[5].strftime('%x %X'))
-            val = lambda i : ' {:8.1f} |'.format(float(data[i])) if stat[i] else ' {:<8} '.format('nan')
-            for i in range(5):
-                self.data_line += val(i)
-            print(self.data_line, end='\r')
-
-            if mode == 'test_nogui':
-                time.sleep(2)
-
-            counter += 1
-
-    def __init__(self, ard, mode):
+    def __init__(self, ard):
+        global t1Array, t2Array, t3Array, pArray, hArray, timeArray
         super().__init__()
         self.ard = ard  # arduino board
+        self.counter = 0
+
+        t1Array = list()
+        t2Array = list()
+        t3Array = list()
+        pArray = list()
+        hArray = list()
+        timeArray = list()
 
         # defines what to do after exiting
         atexit.register(self.exit_handler)
 
-        self.data = [0, 0, 0, 0, 0, 0]
-        self.temp1_arr = []
-        self.temp2_arr = []
-        self.temp3_arr = []
-        self.pres_arr = []
-        self.hum_arr = []
-        self.time_arr = []
+        app = QApplication(sys.argv)
+        plot = ArdPlot(self)
+        sys.exit(app.exec_())
 
-        if mode == 'gui' or mode == 'test':
-            # imports modules needed for GUI
+    def update_data(self):
+        """
+        Updates data from the Arduino board.
+        """
 
-            # starts in GUI mode
-            app = QApplication(sys.argv)
-            plot = ArdPlot()
-            sys.exit(app.exec_())
-        else:
-            # starts in command line mode
-            self.init_cmd(test)
+        global t1Array, t2Array, t3Array, pArray, hArray, timeArray
 
-    def update_data(self, counter):
-        '''
-        Función que actualiza todos los datos de la placa Arduino.
-        La diferencia con la función first_data es que esta función revisa
-        si los datos recibidos tienen sentido o hemos recibido valores
-        incorrectos debido a la instrumentación
-        '''
-        if not test:
-            if not counter:
+        while True:
+
+            if not self.counter:
                 data = []
-            else:
-                data = self.data
-            data = self.data
-            data, stat = self.get_data(data, test)
-            self.time_arr.append(data[5])
-        else:  # sample data in test mode
-            data = ['20.0', '0.0', '-50.0', '999', '0.0', datetime.datetime.now()]
-            self.time_arr.append(data[5])
-            stat = [1, 1, 1, 1, 1, 1]
+            data, stat = self.get_data(data)
+            timeArray.append(data[5])
 
-        return data, stat
-
+            t1Array.append(float(data[0]))
+            t2Array.append(float(data[1]))
+            t3Array.append(float(data[2]))
+            pArray.append(float(data[3]))
+            hArray.append(float(data[4]))
 
     def exit_handler(self):
+        global t1Array, t2Array, t3Array, pArray, hArray, timeArray
         '''
         Stores measured data in a .dat file when exiting the app
         '''
 
         exit_time = datetime.datetime.now()
         ofilename = 'res_{}.dat'.format(exit_time.strftime("%d%m%y_%H%M%S"))
-        if test:
-            ofilename += '_test'
 
         with open('./res/' + ofilename, 'w+', newline='') as self.ofile:
+            self.ofile.write('#{}\t{}\t{}\t{}\t{}\t{}\n'.format(
+                'time', 'Temp. 1 (ºC)', 'Temp. 2 (ºC)', 'Temp. 3 (ºC)',
+                 'Pressure (hPa)', 'Rel. humidity (%)'))
             locale.setlocale(locale.LC_ALL, '')
-            for i in range(len(self.temp1_arr)):
+            for i in range(len(t1Array)):
                 self.ofile.write('{}\t{:.1f}\t{:.2f}\t{:.1f}\t{:.1f}\t{:.1f}\n'.format(
-                    self.time_arr[i].strftime("%d/%m/%y %H:%M:%S"),
-                    self.temp1_arr[i], self.temp2_arr[i],
-                    self.temp3_arr[i], self.pres_arr[i],
-                    self.hum_arr[i]))
+                    datetime.datetime.fromtimestamp(timeArray[i]).strftime("%d/%m/%y %H:%M:%S"),
+                    t1Array[i], t2Array[i],
+                    t3Array[i], pArray[i],
+                    hArray[i]))
 
         print('Exit!')
 
 class ArdPlot(QWidget):
 
-    def __init__(self):
+    def __init__(self, pyard):
         super().__init__()
+        self.pyard = pyard
 
-        self.init_gui(test)
+        self.init_gui(self.pyard)
 
-    def init_gui(self, test):
+    def init_gui(self, pyard):
+        global t1Array, t2Array, t3Array, pArray, hArray, timeArray
 
+        x = threading.Thread(target=self.pyard.update_data)
+        x.daemon = True
+        x.start()
+
+        # colors
+        self.bgColor = 'white'  # background color
+        self.setStyleSheet("background-color: {};".format(self.bgColor))
+
+        # fonts
+        self.valueFont = QFont('SansSerif', 20)
+        self.valueColors = ['#000066', '#b30000', '#e67300']        
+        self.titleFont = QFont('SansSerif', 9)
+        self.titleColor = "#000033"
+
+        # grid
+        grid = QGridLayout()
+        grid.setSpacing(10)
+        self.setLayout(grid)
+
+        # exit button
         qbtn = QPushButton('Exit', self)
         qbtn.clicked.connect(QApplication.instance().quit)
-
         qbtn.setToolTip('Exit the program')
         qbtn.resize(qbtn.sizeHint())
-        qbtn.move(150, 150)
+        grid.addWidget(qbtn, 3, 1, 2, 1)
 
-        self.setGeometry(300, 300, 300, 220)
+        # plot canvas
+        self.canvas = pg.GraphicsLayoutWidget()
+        self.canvas.setBackground('w')
+        grid.addWidget(self.canvas, 0, 0, 1, 3)
+
+        def init_variable(self, name, t_font=self.titleFont,
+                          v_font=self.valueFont,
+                          fg_color=self.titleColor,
+                          bg_color=self.bgColor):
+            """
+            Initializes the label and values for a measured variable.
+            
+            Args:
+                name (str): Name of the variable
+                t_font (QFont, optional): Font of the title
+                v_font (QFont, optional): Font of the displayed value
+                fg_color (str, optional): Font color
+                bg_color (str, optional): Background color
+            
+            Returns:
+                titleLabel (QLabel): variable title
+                valueLabel (QLabel): displayed value
+            """
+
+            titleLabel = QLabel(name)
+            titleLabel.setStyleSheet("color: {}; background-color: {};".format(
+                                     fg_color, bg_color))
+            titleLabel.setFont(t_font)
+            titleLabel.setAlignment(QtCore.Qt.AlignCenter)
+
+            valueLabel = QLabel("{:.1f}".format(0))
+            # the color of the value label will change depending on the measure
+            valueLabel.setStyleSheet("color: {}; background-color: {};".format(
+                                     fg_color, bg_color))
+            valueLabel.setFont(v_font)
+            valueLabel.setAlignment(QtCore.Qt.AlignCenter)         
+
+            return titleLabel, valueLabel
+
+        self.t1Title, self.t1Value = init_variable(self, 'Temperature 1 (ºC)')
+        grid.addWidget(self.t1Title, 1, 0)
+        grid.addWidget(self.t1Value, 2, 0)
+
+        self.t2Title, self.t2Value = init_variable(self, 'Temperature 2 (ºC)')
+        grid.addWidget(self.t2Title, 1, 1)
+        grid.addWidget(self.t2Value, 2, 1)
+
+        self.t3Title, self.t3Value = init_variable(self, 'Temperature 3 (ºC)')
+        grid.addWidget(self.t3Title, 1, 2)
+        grid.addWidget(self.t3Value, 2, 2)
+
+        self.pTitle, self.pValue = init_variable(self, 'Pressure (hPa)')
+        grid.addWidget(self.pTitle, 3, 0)
+        grid.addWidget(self.pValue, 4, 0)
+
+        self.hTitle, self.hValue = init_variable(self, 'Relative humidity (%)')
+        grid.addWidget(self.hTitle, 3, 2)
+        grid.addWidget(self.hValue, 4, 2)
+
+        # temperature plot
+        self.axt = self.canvas.addPlot(0, 0, 1, 2)
+        self.axt.setAxisItems({'bottom': pg.DateAxisItem()})
+        self.axt.setLabel('left', 'Temperature', units='ºC')
+        self.axt.addLegend()
+        self.t1Line = self.axt.plot(timeArray, t1Array,
+                                    pen=pg.mkPen(color='#ff6600'),
+                                    name='T1')
+        self.t2Line = self.axt.plot(timeArray, t2Array,
+                                    pen=pg.mkPen(color='#ffb380'),
+                                    name='T2')
+        self.t3Line = self.axt.plot(timeArray, t3Array,
+                                    pen=pg.mkPen(color='#803300'),
+                                    name='T3')
+
+        self.canvas.nextRow()
+
+        self.axp = self.canvas.addPlot(1, 0, 1, 1)
+        self.axp.setAxisItems({'bottom': pg.DateAxisItem()})    
+        self.axp.setLabel('left', 'Pressure', units='hPa')        
+        self.pLine = self.axp.plot(timeArray, pArray,
+                                   pen=pg.mkPen(color='#1ad1ff'))
+
+        # humidity plot
+
+        self.axh = self.canvas.addPlot(1, 1, 1, 1)
+        self.axh.setAxisItems({'bottom': pg.DateAxisItem()})
+        self.axh.setLabel('left', 'Relative humidity', units='%')    
+        self.hLine = self.axh.plot(timeArray, hArray,
+                                   pen=pg.mkPen(color='#ff0000'))
+
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.update_gui)
+        self.timer.start(0)
+
+        self.resize(800, 600)
+        self.center()
         self.setWindowTitle('Sonda [NOT FINISHED]')
 
         self.show()
 
-def main(port, mode):
-    if not test:
-        print("Detecting Arduino board...")
-        ard_present = False
+    def update_gui(self):
 
-        def sendto_ard(ard, s):
-            ard.write(s.encode())
-            ard.write('>'.encode())  # carácter final
-        while not ard_present:
-            if mode != 'test' and mode != 'test_nogui':
-                ard = serial.Serial(port, 9600)
-                ard_present = True
-            else:
-                continue
-            print("Arduino detected in port: {}".format(port))
-            ard.flushInput()
-            ard_update_interval = input(
-                'Update interval (in seconds): ')
-            sendto_ard(ard, str(int(ard_update_interval) // 8))
-            ard_measure = input(
-                '''
-                Duration of the measurements (in minutes,
-                0 for indefinite measurements: ''')
-            sendto_ard(ard, ard_measure)
-            # enviar datos a la placa por serial
-            ard_present = True
-    else:
-        ard = 0
+        global t1Array, t2Array, t3Array, pArray, hArray, timeArray
 
-    pyard = PyArd(ard, mode)
+        # data, err = self.pyard.update_data()
+
+        def update_gui_value(label, array, line):
+            try:
+                label.setText("{:.1f}".format(array[-1]))
+            except:
+                label.setText("?")
+            line.setData(timeArray, array)
+
+        update_gui_value(self.t1Value, t1Array, self.t1Line)
+        update_gui_value(self.t2Value, t2Array, self.t2Line)
+        update_gui_value(self.t3Value, t3Array, self.t3Line)
+        update_gui_value(self.pValue, pArray, self.pLine)
+        update_gui_value(self.hValue, hArray, self.hLine)   
+
+    def center(self):
+
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
+
+    def closeEvent(self, event):
+
+        reply = QMessageBox.question(self, 'Message',
+                                     "Are you sure to quit?", QMessageBox.Yes |
+                                     QMessageBox.No, QMessageBox.No)
+
+        if reply == QMessageBox.Yes:
+
+            event.accept()
+        else:
+
+            event.ignore()
+
+
+def main(port):
+    print("Detecting Arduino board...")
+    ard_present = False
+
+    # def sendto_ard(ard, s):
+    #     ard.write(s.encode())
+    #     ard.write('>'.encode())  # end character
+    while not ard_present:
+        ard = serial.Serial(port, 9600)
+        ard_present = True
+        print("Arduino detected in port: {}".format(port))
+        ard.flushInput()
+        # ard_update_interval = input(
+        #     'Update interval (in seconds): ')
+        # sendto_ard(ard, str(int(ard_update_interval) // 8))
+        # ard_measure = input(
+        #     '''
+        #     Duration of the measurements (in minutes,
+        #     0 for indefinite measurements: ''')
+        # sendto_ard(ard, ard_measure)
+        ard_present = True
+
+    pyard = PyArd(ard)
 
     return 0
 
 if __name__ == '__main__':
-    global test
-    test = True
-    port = 0
 
-    modes = ['test', 'test_nogui', 'gui', 'nogui']
-    mode = ''
-    while mode not in modes:
-        mode = input('Mode: ')
+    port = input('Arduino port: ')
 
-    if mode != 'test' and mode != 'test_nogui':
-        port = input('Arduino port: ')
-        test = False
-    main(port, mode)
+    main(port)
