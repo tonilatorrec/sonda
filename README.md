@@ -2,24 +2,9 @@
 
 Data logging with Arduino and Python
 
-## Python
-Usage:
-
-```
-python sonda.py [-m MODE] [-p PORT]
-```
-
-* `MODE` is the mode in which the program will run (for now only test mode; for normal mode, leave this argument blank)
-* `PORT` is the serial port address where the Arduino board is connected.
-
-Test mode: 
-```
-python sonda.py -m test
-```
 ## Arduino
 
-The board must have the `pysonda.ino` file in order to use the Python script.
-
+The board must have the `pysonda.ino` file in order to use the Python script. The `sonda.ino` file contains the full flight computer code (requires tracking by radio, see the tracking guide [here](https://ukhas.org.uk/guides:tracking_guide))
 
 ### Data structure
 `pysonda.ino`:
@@ -41,9 +26,25 @@ Specifical wiring for this code (apart from VIN/GND connections).
 | DHT22 (temp&hum sensor) | out | D2 |
 | DS18B20 (temp sensor) | yellow | D8 |
 
-The `sonda.ino` file contains the whole flight computer code. The additional components are:
+For the flight computer code, the additional components are:
+
 Component | Component pin | Arduino pin
 --------- | ------------- | -----------
 LC Studio SD card module | CS | D10
 U-blox MAX-M8C (GPS) | TXD | D4
 Radiometrix NTX2B | 7 | D9
+
+## Python
+`sonda.py` usage:
+
+```
+python sonda.py [-m MODE] [-p PORT]
+```
+
+* `MODE` is the mode in which the program will run (for now only test mode; for normal mode, leave this argument blank)
+* `PORT` is the serial port address where the Arduino board is connected.
+
+Test mode: 
+```
+python sonda.py -m test
+```
