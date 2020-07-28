@@ -1,10 +1,12 @@
 # sonda
 
-Data logging with Arduino and Python
+Data logging with Arduino and Python.
 
 ## Arduino
 
-The board must have the `pysonda.ino` file in order to use the Python script. The `sonda.ino` file contains the full flight computer code (requires tracking by radio, see the tracking guide [here](https://ukhas.org.uk/guides:tracking_guide))
+The `pysonda.ino` file contains the basic data logging code. Coupled with the Python script `sonda.py`, can also be used as a weather station.
+
+The `sonda.ino` file contains the full flight computer code for a high-altitude balloon (requires tracking by radio, see the tracking guide [here](https://ukhas.org.uk/guides:tracking_guide))
 
 ### Data structure
 `pysonda.ino`:
