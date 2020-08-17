@@ -11,7 +11,7 @@ The `sonda.ino` file contains the full flight computer code for a high-altitude 
 ### Data structure
 `pysonda.ino`:
 ```
-T1;T2;T3;P0;U
+T1;T2;P0;U
 ```
 
 `sonda.ino`:
@@ -26,7 +26,7 @@ Specifical wiring for this code (apart from VIN/GND connections).
 | BMP180 (temp&pres sensor) | SCL | A5 |
 | BMP180 (temp&pres sensor) | SDA | A4 |
 | DHT22 (temp&hum sensor) | out | D2 |
-| DS18B20 (temp sensor) | yellow | D8 |
+
 
 For the flight computer code, the additional components are:
 
@@ -35,6 +35,7 @@ Component | Component pin | Arduino pin
 LC Studio SD card module | CS | D10
 U-blox MAX-M8C (GPS) | TXD | D4
 Radiometrix NTX2B | 7 | D9
+DS18B20 (temp sensor) | yellow | D8 |
 
 ## Python
 `sonda.py` usage:
