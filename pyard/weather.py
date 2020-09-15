@@ -12,8 +12,6 @@ from cfg import *
 
 def main(test=True, mode='test', port=0, api=0, channel=0):
 
-    # adds sensors information
-
     app = QApplication(sys.argv)
     mw = App(test, mode, port, api, channel)  # main window
     sys.exit(app.exec_())
@@ -60,7 +58,6 @@ if __name__ == '__main__':
             print("Port at {} is not available".format(args.port))
             quit()
     elif args.api:
-        # connect to api
         api = args.api
         channel = input('ThingSpeak channel:\n> ')
         print('Listening to ThingSpeak channel {}'.format(channel))
