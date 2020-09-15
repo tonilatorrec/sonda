@@ -4,7 +4,7 @@ Data logging with Arduino and Python.
 
 ## Arduino
 
-The `pysonda.ino` file contains the basic data logging code. Coupled with the Python script `sonda.py`, can also be used as a weather station.
+The `pysonda.ino` file contains the basic data logging code. Coupled with the Python script `weather.py`, it can also be used as a weather station.
 
 The `sonda.ino` file contains the full flight computer code for a high-altitude balloon (requires tracking by radio, see the tracking guide [here](https://ukhas.org.uk/guides:tracking_guide))
 
@@ -38,16 +38,20 @@ Radiometrix NTX2B | 7 | D9
 DS18B20 (temp sensor) | yellow | D8 |
 
 ## Python
-`sonda.py` usage:
+
+For now, the `weather.py` program only works with `pysonda.ino` (as a weather station). Usage:
 
 ```
-python sonda.py [-m MODE] [-p PORT]
+python weather.py [-h] [-t] [-p PORT] [-b BAUD] [-a API]
 ```
+where:
 
-* `MODE` is the mode in which the program will run (for now only test mode; for normal mode, leave this argument blank)
-* `PORT` is the serial port address where the Arduino board is connected.
+* `-t` executes the program in test mode (the values will be random numbers sampled from Gaussian distributions)
+* `PORT` is the serial port address where the Arduino board is connected. If both `PORT` and `BAUD` are given, the program enters the serial mode.
+* `BAUD` is the baud rate at which the program will listen to the board. Only needed when `PORT` is specified.
+* `API` is the ThingSpeak API from which the data is collected. If specified, the program enters the ThingSpeak mode.
 
 Test mode: 
 ```
-python sonda.py -m test
+python weather.py -t
 ```
