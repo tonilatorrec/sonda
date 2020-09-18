@@ -10,6 +10,9 @@ from PyQt5.QtWidgets import QApplication
 from gui import *
 from cfg import *
 
+import gettext
+_ = gettext.gettext
+
 def main(test=True, mode='test', port=0, api=0, channel=0):
 
     app = QApplication(sys.argv)
@@ -21,7 +24,7 @@ if __name__ == '__main__':
     ap = argparse.ArgumentParser()
 
     ap.add_argument("-t", "--test", required=False, action="store_true",
-                    help="Enables test mode")
+                    help=_("Enables test mode"))
     ap.add_argument("-p", "--port", required=False,
                     help="Receive data from serial port")
     ap.add_argument("-b", "--baud", required=False,

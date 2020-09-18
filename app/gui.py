@@ -8,7 +8,23 @@ import styles
 from cfg import *
 import getdata
 
-class App(QWidget):
+
+class FirstCfgWindow(QWidget):
+
+    def __init__(self, test, mode, port, api, channel):
+        super().__init__()
+
+        self.setWindowTitle("Weather")
+
+        layout = QVBoxLayout()
+
+        self.b1 = QPushButton("Enter the app")
+        layout.addWidget(self.b1)
+
+        self.setLayout(layout)
+
+
+class App(QMainWindow):
 
     def __init__(self, test, mode, port, api, channel):
 
@@ -20,6 +36,12 @@ class App(QWidget):
         self.api = api
         self.channel = channel
 
+        self.firstcfg = FirstCfgWindow(test, mode, port, api, channel)
+        self.firstcfg.b1.clicked.connect(self.init_ui)
+        self.firstcfg.show()
+
+    def init_ui(self):
+
         self.title = 'Weather station'
         if self.mode == 'test':
             self.title += " [test mode]"
@@ -27,7 +49,10 @@ class App(QWidget):
 
         grid = QGridLayout()
         grid.setSpacing(5)
-        self.setLayout(grid)
+        widget = QWidget(self)
+        widget.setLayout(grid)
+
+        self.setCentralWidget(widget)
 
         # plot canvas
 
@@ -36,64 +61,60 @@ class App(QWidget):
         self.canvas.setBackground(styles.bgCanvas)
         grid.addWidget(self.canvas, 0, 0, 1, 2)
 
-        for var in weatherVars:
+        for var in weatherVarsList:
             if var != time:
                 # variable name displayed in the GUI
                 var.title = QLabel('{} ({})'.format(var.name, var.units))
                 var.title.setStyleSheet(styles.titleStyle)
                 var.title.setAlignment(QtCore.Qt.AlignCenter)
+                # TODO: Add (systematic) uncertainties due to the components' resolution.
                 # var.error = var.systError
                 # var.errorLabel = QLabel('± {}{}'.format(var.error, var.units))
                 var.valueLabel = QLabel("??")
                 var.valueLabel.setStyleSheet(styles.valueLabelStyle)
                 var.valueLabel.setAlignment(QtCore.Qt.AlignCenter)
 
-        grid.addWidget(temp1.title, 1, 0)
-        grid.addWidget(temp1.valueLabel, 2, 0)
-
-        grid.addWidget(temp2.title, 3, 0)
-        grid.addWidget(temp2.valueLabel, 4, 0)
-
-        grid.addWidget(pres.title, 1, 1)
-        grid.addWidget(pres.valueLabel, 2, 1)
-
-        grid.addWidget(hum.title, 3, 1)
-        grid.addWidget(hum.valueLabel, 4, 1)
-
-        self.axt, temp1.line = self.init_subplot(temp1, (0, 0, 1, 2), legend=True)
-        self.axt.setLabel('left', text='Temperature', units=temp1.units)
-        temp2.line = self.axt.plot(time.array, temp2.array,
-                            pen=pg.mkPen(color=styles.linePenColors[1]),
-                            name=temp2.name)
-
-        self.axp, pres.line = self.init_subplot(pres, (1, 0, 1, 1))
-        self.axh, hum.line = self.init_subplot(hum, (1, 1, 1, 1))
-
-        self.init_ui(mode)
-
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.update_gui)
-        self.timer.start(0)  
-
-    # def center(self):
-
-    #     qr = self.frameGeometry()
-    #     cp = QDesktopWidget().availableGeometry().center()
-    #     qr.moveCenter(cp)
-    #     self.move(qr.topLeft())
-
-    def init_ui(self, mode):
+        self.add_value_widgets(grid)
+        self.add_subplots()
 
         thr_gui = threading.Thread(target=self.update_data)
         thr_gui.daemon = True
         thr_gui.start()
 
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.update_gui)
+        self.timer.start(0)
+
         self.setWindowTitle(self.title)
+
+        self.firstcfg.close()        
         self.show()
 
-    def init_subplot(self, weatherVar, pos, legend=False):
+    def add_value_widgets(self, grid):
+        nvar = len(weatherVars)
+        j = 1
+        for line in config['var_grid']:
+            row = config['var_grid'][line].split(';')
+            row_length = len(row)
+            for i in range(row_length):
+                n = int(row[i][-1])
+                # title widget
+                grid.addWidget(weatherVarsList[n - 1].title, j, i)
+                grid.addWidget(weatherVarsList[n - 1].valueLabel, j + 1, i)
+            j += 2
 
-        # TODO: Create a "Subplot" class
+    def add_subplots(self):
+        grid_nrows = len(config['plot_grid'])
+        for i in range(1, grid_nrows + 1):
+            j = 0
+            row = config['plot_grid']['row{}'.format(i)].split(';')
+            for var_type in row:
+                self.init_subplot(var_type, (i, j, 1, 1))
+                j += 1
+
+    def init_subplot(self, var_type, pos):
+
+        v1 = weatherVars[var_type][0]
 
         pn = pg.mkPen(color=styles.plotPenColor)
         r, c, h, w = pos
@@ -101,16 +122,17 @@ class App(QWidget):
         p.setAxisItems({'bottom': pg.DateAxisItem(pen=pn, textPen=pn),
                         'left': pg.AxisItem(orientation='left', pen=pn,
                                             textPen=pn)})
-        p.setLabel('left', text=weatherVar.name, units=weatherVar.units)
+        p.setLabel('left', text=v1.type, units=v1.units)
 
-        if legend:
+        if len(weatherVars[var_type]) > 1:
             p.addLegend()
 
-        line = p.plot(time.array, weatherVar.array,
-                      pen=pg.mkPen(color=styles.linePenColors[0]),
-                      name=weatherVar.name)
-
-        return p, line
+        i = 0
+        for v in weatherVars[var_type]: 
+            v.line = p.plot(time.array, v.array,
+                            pen=pg.mkPen(color=styles.linePenColors[i]),
+                            name=v.name)
+            i += 1
 
     def update_data(self):
         '''
@@ -129,19 +151,19 @@ class App(QWidget):
                             upd = True
                     except:
                         continue
-            for i in range(len(weatherVars)):
-                weatherVars[i].updateVal(data[i], stat[i])
+            for i in range(len(weatherVarsList)):
+                weatherVarsList[i].updateVal(data[i], stat[i])
+            time.updateVal(data[-1], stat[-1])
             sleep(10)
 
     def update_gui(self):
 
-        for var in weatherVars:
-            if var != time:
-                try:
-                    var.valueLabel.setText("{:.1f}".format(var.value))
-                    var.line.setData(time.array, var.array)
-                except:
-                    pass
+        for var in weatherVarsList:
+            try:
+                var.valueLabel.setText("{:.1f}".format(var.value))
+                var.line.setData(time.array, var.array)
+            except:
+                pass
 
     def closeEvent(self, event):
 
@@ -150,7 +172,7 @@ class App(QWidget):
                                      QMessageBox.No, QMessageBox.No)
 
         if reply == QMessageBox.Yes:
+            # TODO: Save data in a CSV file
             event.accept()
         else:
-
             event.ignore()
