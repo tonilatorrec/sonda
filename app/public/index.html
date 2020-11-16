@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Sonda</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@500;600;800&family=Playfair+Display&display=swap" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="css/style.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+    </head>
+    <body>
+
+        <script>
+            var socket = io.connect('http://localhost:4000'); //connect to server
+
+            function updateValue(weatherVar, x) {
+                wrapper = document.getElementById(weatherVar);
+                wrapper.getElementsByClassName("var-value")[0].innerHTML = x.data + x.units;
+                wrapper.getElementsByClassName("var-time")[0].innerHTML = "Última actualització: " + x.time;
+            }
+
+            socket.on('temp', function (data) {
+                updateValue('temp', data);
+            });
+            socket.on('pres', function (data) {
+                updateValue('pres', data);
+            });
+            socket.on('u', function (data) {
+                updateValue('u', data);
+            });
+        </script>
+
+        <div class="page">
+            <div class="header">
+                <div class="header-title">Sonda</div>
+                <div class="header-mode">/dev/ttyUSB0</div>
+            </div>
+            <div class="main">
+                <div class="wrapper" id='temp'>
+                    <div class="plot"></div>
+                    <div class="info">
+                        <div class="var-title">Temperatura</div>
+                        <div class="sensor-name">DHT22</div>
+                        <div class="var-value-wrapper">
+                            <div class="var-value"></div>
+                            <div class="var-error"></div>
+                        </div>
+                        <div class="var-time"></div>
+                    </div>
+                </div>
+                <div class="wrapper" id='u'>
+                    <div class="plot"></div>
+                    <div class="info">
+                        <div class="var-title">Humitat relativa</div>
+                        <div class="sensor-name">DHT22</div>
+                        <div class="var-value-wrapper">
+                            <div class="var-value"></div>
+                            <div class="var-error"></div>
+                        </div>
+                        <div class="var-time"></div>
+                    </div>
+                </div>
+                <div class="wrapper" id='pres'>
+                    <div class="plot"></div>
+                    <div class="info">
+                        <div class="var-title">Pressió</div>
+                        <div class="sensor-name">BMP180</div>
+                        <div class="var-value-wrapper">
+                            <div class="var-value"></div>
+                            <div class="var-error"></div>
+                        </div>
+                        <div class="var-time"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="footer">
+                <div class="footer-option"></div>
+                <div class="footer-option"></div>
+                <div class="footer-option"></div>
+            </div>
+        </div>
+
+</html>
