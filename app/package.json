@@ -1,17 +1,15 @@
 {
-  "name": "temperature",
+  "name": "Sonda",
   "version": "1.0.0",
-  "description": "Real-time graph generation of temperature using Arduino, Node.js and Chart.js",
-  "main": "index.js",
+  "description": "Data logging / weather station",
+  "main": "sonda.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Priyansh Rastogi",
-  "license": "MIT",
+  "author": "Toni Latorre",
   "dependencies": {
+    "chart.js": "^2.9.4",
     "express": "^4.17.1",
-    "jquery": "^3.5.1",
-    "jsdom": "^16.4.0",
     "serialport": "^9.0.2",
     "socket.io": "^2.3.0"
   }

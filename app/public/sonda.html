@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Sonda</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- Fonts -->
+        <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@500;600;800&display=swap" rel="stylesheet">
+        <!-- Chart.js -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.bundle.min.js"></script>    
+        <!-- Socket.io -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+        <!-- CSS stylesheet -->
+        <link rel="stylesheet" type="text/css" href="css/style.css">
+    </head>
+    <body>
+
+        <div class="page">
+            <div class="header">
+                <div class="header-title">Sonda</div>
+                <div class="header-mode" id="header-mode"><span id="is-listening">Not listening</span> <span id="data-source"></span></div>
+            </div>
+            <div class="main">
+                <div class="wrapper" id='temp'>
+                    <div class="info">
+                        <div class="var-title" id='temp-title'>Temperature</div>
+                        <div class="sensor-name" id='temp-sensor'></div>
+                        <div class="var-value-wrapper">
+                            <div class="var-value"></div>
+                            <div class="var-error" id='temp-error'></div>
+                        </div>
+                        <div class="var-time"></div>
+                    </div>
+                    <div class="plot-wrapper hide">
+                        <canvas class="plot" id='t-plot'></canvas>
+                    </div>
+                </div>
+                <div class="wrapper" id='u'>
+                    <div class="info">
+                        <div class="var-title" id='u-title'>Relative humidity</div>
+                        <div class="sensor-name" id='u-sensor'></div>
+                        <div class="var-value-wrapper">
+                            <div class="var-value"></div>
+                            <div class="var-error" id='u-error'></div>
+                        </div>
+                        <div class="var-time"></div>
+                    </div>
+                    <div class="plot-wrapper hide">
+                        <canvas class="plot" id='u-plot'></canvas>
+                    </div>
+                </div>
+                <div class="wrapper" id='pres'>
+                    <div class="info">
+                        <div class="var-title" id='p-title'>Sea-level pressure</div>
+                        <div class="sensor-name" id='p-sensor'></div>
+                        <div class="var-value-wrapper">
+                            <div class="var-value"></div>
+                            <div class="var-error" id='p-error'></div>
+                        </div>
+                        <div class="var-time"></div>
+                    </div>
+                    <div class="plot-wrapper hide">
+                        <canvas class="plot" id='p-plot'></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="updateData.js"></script>
+        <!-- show or hide each plot on click (only for mobile screens) -->
+        <script src="togglePlot.js"></script>
+
+</html>
