@@ -21,15 +21,15 @@ DHT dht(DHTPIN, DHTTYPE); // DHT sensor
 
 // WiFi parameters
 // Replace with your wifi network's name
-String AP = "vodafone5940";
+String AP = "YOUR-WIFI-NETWORK";
 // Replace with your network's password
-String PASS = "94C6QW6WDKMDDC";
+String PASS = "YOUR-WIFI-PASSWORD";
 
 // ThingSpeak parameters
 String HOST = "184.106.153.149"; // api.thingspeak.com
 int PORT = 80;
 // Replace with the API key of your ThingSpeak channel
-String API = "HH33RKFT8EWT7SQX"; 
+String API = "YOUR-THINGSPEAK-API"; 
 // Fields to be uploaded to ThingSpeak
 // In this case I report three fields: temperature, pressure, and relative humidity
 String fields[] = {"&field1=", "&field2=", "&field3="};
@@ -50,7 +50,7 @@ void setup() {
   Serial.begin(9600);
   bmp.begin();  // initializes BMP180 sensor
   dht.begin();  // initializes DHT22 sensor
- 
+
   WiFi.begin(AP, PASS); // initializes WiFi
   // Maximum number of times the board will try to connect to the Internet
   int max_connection_attempts = 30; 
@@ -65,6 +65,13 @@ void setup() {
   {
 	Serial.println("CONNECTED");
     delay(7000);
+
+  // Serial output
+  Serial.flush();
+  delay(1000);
+  Serial.println("+----------------+----------------+---------------+");
+  Serial.println("| Temp. (±0.5ºC) | Humidity (±1%) | Pres. (±1 hPa)|");
+  Serial.println("+----------------+----------------+---------------+");  
 	
 	// Measurements
 	T = get_temperature();
@@ -86,7 +93,7 @@ void setup() {
 		char buf_U[16];
 		String strU = dtostrf(U, 4, 1, buf_U);
 	  
-		String strData[] = {strT, strT2, strp, strU};
+		String strData[] = {strT, strp, strU};
   
       String sendData = API;
       for (int j = 0; j < 4; j++) {
@@ -113,26 +120,24 @@ void setup() {
 		Serial.println("UNABLE TO POST TO API");
 	}
 	
-	// Serial output
-	// The data format (temperature, pressure, humidity) is as follows:
+  // Serial output
+  // The data format (temperature, pressure, humidity) is as follows:
 
-	// "+----------------+----------------+----------------+"
-	// "| Temp. (?0.5?C) | Humidity (?1%) | Pres. (?1 hPa) |"
-	// "+----------------+----------------+----------------+"
-	// "|     +xx.xx     |      xxx       |     xxxx.x     |"
-	// "+----------------+-----------------+---------------+"
-	
-	Serial.println("+----------------+-----------------+---------------+");
-	Serial.println("| Temp. (?0.5?C) | Humidity (?1%) | Pres. (?1 hPa) |");
-	Serial.println("+----------------+-----------------+---------------+");
-	Serial.println("|     ");
-	Serial.print(T);
-	Serial.print("     |      ");
-	Serial.print(U);
-	Serial.print("       |     ");
-	Serial.print(p0, 1);
-	Serial.print("     |");
-	Serial.println("+----------------+-----------------+---------------+");
+  // "+----------------+----------------+----------------+"
+  // "| Temp. (±0.5ºC) | Humidity (±1%) | Pres. (±1 hPa) |"
+  // "+----------------+----------------+----------------+"
+  // "|     +xx.xx     |      xxx       |     xxxx.x     |"
+  // "+----------------+-----------------+---------------+"
+  
+  Serial.print("|     ");
+  Serial.print(T);
+  Serial.print("      |      ");
+  Serial.print(U);
+  Serial.print("     |    ");
+  Serial.print(p0, 1);
+  Serial.println("     |");
+  Serial.println("+----------------+----------------+---------------+");
+  
   }
   else {
 	  Serial.println("CONNECTION FAILED");
@@ -149,17 +154,17 @@ void loop() {
 }
 
 
-void get_temperature() {
+float get_temperature() {
 	// Temperature measured by DHT22
 	return dht.readTemperature();
 }
 
-void get_temperature() {
+float get_humidity() {
 	// Humidity measured by DHT22
 	return dht.readHumidity();
 }
 
-void get_pressure() {
+double get_pressure() {
 	// Sea-level pressure measured by BMP180
 	
 	// In order to make a correction to the absolute pressure,

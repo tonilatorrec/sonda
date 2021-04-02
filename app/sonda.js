@@ -6,6 +6,8 @@ var server = app.listen(4000, () => {
     console.log("Listening to requests on port 4000...");
 })
 
+const https = require('https');
+
 var io = require('socket.io')(server);
 
 app.use(bodyparser.urlencoded({extended: true}));
@@ -65,6 +67,50 @@ app.post('/sonda', (req, res) => {
         });
     }
 
+    else if (req.body.channel) {
+        var ch = req.body.channel; // ThingSpeak channel
+        var api = 'JZY6GE5G2P7I6D5G'; // API
+
+        https.get('https://api.thingspeak.com/channels/' + ch + '/feeds.json?api_key=' + api + '&results=1', (res) => {
+            var received = '';
+
+            res.on('data', (chunk) => {
+                received += chunk;
+            });
+
+            res.on('end', () => {
+                
+                io.sockets.emit('channel', ch);
+                var data = {};
+                var rawData = JSON.parse(received);
+
+                var feeds = rawData.feeds[0];
+
+                var today = new Date(feeds["created_at"]);
+
+                // the feed data is stored in JSON format, not as a string with separators
+                data["T"] = {
+                    value: parseFloat(feeds["field1"]).toFixed(1),
+                };
+                data['P'] = {
+                    value: parseFloat(feeds["field3"]).toFixed(1),
+                };           
+                data['U'] = {
+                    value: parseInt(feeds["field4"].replace(/\r\n\r\n/g, '')),
+                };
+
+                io.sockets.emit('newData', {
+                    // saves time as hh:mm
+                    time: (today.getHours())+":"+((today.getMinutes() < 10 ? '0' : '') + today.getMinutes()),
+                    data: data
+                });
+            });
+        }).on('error', (err) =>{
+            console.log("Error: " + err.message);
+        });
+    }
+
     res.redirect('/sonda');
 
 });
+

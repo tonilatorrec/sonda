@@ -1,14 +1,14 @@
-body {
-    margin: 0;
-    padding: 0;
-}
-
 :root {
     /* Colors */
     --color-1: #000;
     --color-2: #666;
     --color-3: #ccc;
     --color-4: #fff;
+}
+
+body {
+    margin: 0;
+    padding: 0;
 }
 
 .page {
@@ -23,15 +23,31 @@ body {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+
+    padding: 20px 0;
 }
 
 #button-serial, #button-channel {
-    margin: 20px;
-    border: 1px solid black;
+    margin: 5px 20px;
+    border: 1px solid var(--color-1);
+    background-color: var(--color-4);
+
+    border-radius: 10px;
+
+    font-size: 15pt;
 }
 
 #input-serial, #input-channel {
     display: none;
+
+    padding: 10px;
+
+    border: 1px solid var(--color-1);
+    background-color: var(--color-4);
+
+    border-radius: 10px;
+
+    font-size: 13pt;
 }
 
 .header {
@@ -156,6 +172,18 @@ body {
 /* Mobile styles */
 
 @media only screen and (max-width: 960px) {
+
+    .page {
+        margin: 0 auto;
+    }
+
+    .button-wrapper {
+        flex-direction: column;
+    }
+
+    button {
+        height: 40px;
+    }
 
     .header {
         height: 80px;

@@ -97,6 +97,12 @@
             document.getElementById("data-source").innerHTML = s;
         });
 
+        socket.on('channel', function (ch) {
+            document.getElementById("is-listening").innerHTML = 'Listening to ThingSpeak channel';
+            document.getElementById("data-source").innerHTML = ch;
+        });
+
+
         socket.on('newData', function (inp) {
             for (let i = 0; i < Object.keys(inp.data).length; i++) {
                 v = Object.keys(inp.data)[i];
