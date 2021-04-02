@@ -1,4 +1,4 @@
-// Version to use with Arduino boards (continuous output via serial)
+// Version to use with ESP8266 devices (serial output)
 // Date: 11/03/2021
 
 // Components used:
@@ -22,50 +22,39 @@ DHT dht(DHTPIN, DHTTYPE); // DHT sensor
 #define ALT 330.0  // ground elevation (in meters)
 
 // Variables
-float T = 0;  // DHT22 temperature (?C)
+float T = 0;  // DHT22 temperature (ºC)
 double p0 = 0; // BMP180 sea-level pressure (hPa)
 float U = 0;   // DHT22 relative humidity (%)
-
-byte i = 0; // Counter (number of 
 
 void setup() {
   Serial.begin(9600);
   bmp.begin();  // initializes BMP180 sensor
   dht.begin();  // initializes DHT22 sensor
+
+ // DHT22 measurements
   
-  Serial.flush();
-  delay(1000);
-  Serial.println("+----------------+----------------+---------------+");
-  Serial.println("| Temp. (±0.5ºC) | Humidity (±1%) | Pres. (±1 hPa)|");
-  Serial.println("+----------------+----------------+---------------+");  
-}
-
-void loop() {
-
 	// Measurements
 	T = get_temperature();
 	U = get_humidity();
 	p0 = get_pressure();
 	
-	// Output
+  	// Output
 	// The data format (temperature, pressure, humidity) is as follows:
-
-	// "+----------------+----------------+----------------+"
-	// "| Temp. (±0.5ºC) | Humidity (±1%) | Pres. (±1 hPa) |"
-	// "+----------------+----------------+----------------+"
-	// "|     +xx.xx     |      xxx       |     xxxx.x     |"
-	// "+----------------+-----------------+---------------+"
-	
-	Serial.print("|     ");
-	Serial.print(T);
-	Serial.print("      |      ");
-	Serial.print(U);
-	Serial.print("     |    ");
-	Serial.print(p0, 1);
-	Serial.println("     |");
-	Serial.println("+----------------+----------------+---------------+");
-	
+	// T+xx.xxPxxxx.xxUxx.x
+    Serial.print("T");
+    Serial.print(T);
+    Serial.print("P");
+    Serial.print(p0, 2);
+    Serial.print("U");
+    Serial.println(U);
     delay(5000);
+
+// Puts the board into sleep mode for 80 seconds
+    ESP.deepSleep(80*1e6);
+}
+
+void loop() {
+ 
 }  
 
 float get_temperature() {
@@ -73,7 +62,7 @@ float get_temperature() {
 	return dht.readTemperature();
 }
 
-float get_humidity() {
+float get_temperature() {
 	// Humidity measured by DHT22
 	return dht.readHumidity();
 }
@@ -85,7 +74,7 @@ double get_pressure() {
 	// the BMP180 requires measuring the temperature.
 	double T2;
 	double p; // Absolute pressure (depends on the ground elevation)
-
+	
     char status;
     status = bmp.startTemperature();
     if (status != 0)
