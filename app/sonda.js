@@ -10,6 +10,10 @@ const https = require('https');
 
 var io = require('socket.io')(server);
 
+/* THINGSPEAK API */
+/* Change by your API if you are going to read from a ThingSpeak server */
+var api = 'your-thingspeak-api';
+
 app.use(bodyparser.urlencoded({extended: true}));
 
 app.use('/', express.static('public'));
@@ -69,7 +73,6 @@ app.post('/sonda', (req, res) => {
 
     else if (req.body.channel) {
         var ch = req.body.channel; // ThingSpeak channel
-        var api = 'JZY6GE5G2P7I6D5G'; // API
 
         https.get('https://api.thingspeak.com/channels/' + ch + '/feeds.json?api_key=' + api + '&results=1', (res) => {
             var received = '';
@@ -93,10 +96,10 @@ app.post('/sonda', (req, res) => {
                     value: parseFloat(feeds["field1"]).toFixed(1),
                 };
                 data['P'] = {
-                    value: parseFloat(feeds["field3"]).toFixed(1),
+                    value: parseFloat(feeds["field2"]).toFixed(1),
                 };           
                 data['U'] = {
-                    value: parseInt(feeds["field4"].replace(/\r\n\r\n/g, '')),
+                    value: parseInt(feeds["field3"].replace(/\r\n\r\n/g, '')),
                 };
 
                 io.sockets.emit('newData', {
