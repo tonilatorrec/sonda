@@ -9,8 +9,8 @@
   "author": "Toni Latorre",
   "dependencies": {
     "chart.js": "^2.9.4",
-    "express": "^4.17.1",
+    "express": "^4.18.1",
     "serialport": "^9.0.2",
-    "socket.io": "^2.3.0"
+    "socket.io": "^4.5.1"
   }
 }
