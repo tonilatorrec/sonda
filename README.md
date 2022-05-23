@@ -1,6 +1,6 @@
 # sonda
 
-Data logging with Arduino and Python.
+Data logging with Arduino.
 
 ## Arduino sketches
 
