@@ -1,0 +1,46 @@
+{
+    "variables": ["temp1", "temp2", "slp", "hum"],
+    "values_grid":{
+        "row1":["temp1","slp"],
+        "row2":["temp2","hum"]
+    },
+    "plots_grid":{
+        "row1":["temp"],
+        "row2":["slp"],
+        "row3":["hum"]
+    },
+    "sensors":{
+        "temp1":{
+            "sensorName":"DHT22",
+            "units":"ºC",
+            "resolution":0.1,
+            "systError":0.5,
+            "minVal":-40,
+            "maxVal":80
+        },
+        "temp2":{
+            "sensorName":"BMP180",
+            "units":"ºC",
+            "resolution":0.1,
+            "systError":1,
+            "minVal":-40,
+            "maxVal":85
+        },
+        "slp":{
+            "sensorName":"DHT22",
+            "units":"ºC",
+            "resolution":0.01,
+            "systError":0.12,
+            "minVal":300,
+            "maxVal":1100
+        },
+        "hum":{
+            "sensorName":"DHT22",
+            "units":"%",
+            "resolution":0.1,
+            "systError":1,
+            "minVal":0,
+            "maxVal":100
+        }
+    }
+}
