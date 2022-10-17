@@ -83,17 +83,17 @@ config = configparser.ConfigParser()
 config.read('arduino.cfg')
 
 nvar = len(config['vars'])
-weatherVars = dict()
-weatherVarsList = []
+dict_weather_vars = dict()
+list_weather_vars = []
 
 for i in range(1, nvar + 1):
     name = config['vars']['var{}'.format(i)]
     var_type, number = parse_variable_name(name)
-    if var_type not in weatherVars.keys():
-        weatherVars.update({var_type: []})
-    weatherVars[var_type].append(WeatherVar(var_type, number))
-    weatherVarsList.append(weatherVars[var_type][-1])
+    if var_type not in dict_weather_vars.keys():
+        dict_weather_vars.update({var_type: []})
+    dict_weather_vars[var_type].append(WeatherVar(var_type, number))
+    list_weather_vars.append(dict_weather_vars[var_type][-1])
 
 time = TimeVar('time')
 
-weatherVarTypes = list(weatherVars.keys())
+weatherVarTypes = list(dict_weather_vars.keys())

@@ -2,22 +2,20 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-import serial
 import sys
-
-from PyQt5.QtWidgets import QApplication
-
-from gui import *
-from cfg import *
-
 import gettext
+
+from PyQt6.QtWidgets import QApplication
+import serial
+
+from gui import App
+
 _ = gettext.gettext
 
 def main(test=True, mode='test', port=0, api=0, channel=0):
-
     app = QApplication(sys.argv)
-    mw = App(test, mode, port, api, channel)  # main window
-    sys.exit(app.exec_())
+    App(test, mode, port, api, channel)  # main window
+    sys.exit(app.exec())
 
 if __name__ == '__main__':
 
@@ -40,11 +38,11 @@ if __name__ == '__main__':
         # receive data from the other one.
 
     if len(sys.argv) == 1:
-        m = input("You must select one mode. Do you want to run in test mode? (y/n)\n> ")
-        if m == "y":
+        run_mode = input("You must select one mode. Do you want to run in test mode? (y/n)\n> ")
+        if run_mode == "y":
             main(args.test, mode='test')
         else:
-            quit()
+            sys.exit()
     elif not(args.port and args.baud) and not (args.test or args.api):
         if not args.baud:
             try:
@@ -54,17 +52,16 @@ if __name__ == '__main__':
         elif not args.port:
             args.port = input("You must specify the port:\n> ")
         try:
-            print("Listening to serial port at {}".format(args.port))
+            print(f"Listening to serial port at {args.port}")
             ser = serial.Serial(args.port, args.baud)
             main(args.test, mode='serial', port=args.port)
         except serial.serialutil.SerialException:
-            print("Port at {} is not available".format(args.port))
-            quit()
+            print(f"Port at {args.port} is not available")
+            sys.exit()
     elif args.api:
         api = args.api
         channel = input('ThingSpeak channel:\n> ')
-        print('Listening to ThingSpeak channel {}'.format(channel))
+        print(f'Listening to ThingSpeak channel {channel}')
         main(args.test, mode='api', api=api, channel=channel)
     else:
         main(args.test, mode='test')
-    pass
